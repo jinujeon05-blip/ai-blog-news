@@ -106,8 +106,9 @@ if st.button("🚀 블로그 포스팅 및 썸네일 가이드 생성하기", ty
                 - **썸네일 메인 문구 (텍스트)**: (클릭을 부르는 짧고 강렬한 핵심 문구 1~2줄)
                 """
 
+                # 최신 모델명으로 호출
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.6-flash',
                     contents=prompt
                 )
                 blog_result = response.text
