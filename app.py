@@ -3,6 +3,7 @@ from google import genai
 import os
 from bs4 import BeautifulSoup
 import requests
+import time
 
 # 페이지 설정
 st.set_page_config(
@@ -70,11 +71,9 @@ if st.button("🚀 블로그 포스팅 및 썸네일 가이드 생성하기", ty
         st.warning("분석할 내용(URL 또는 텍스트)을 입력해주세요.")
     else:
         try:
-            # Gemini 클라이언트 초기화
             client = genai.Client(api_key=api_key)
             
             with st.spinner("10년 차 블로거 스타일로 글, 썸네일 가이드, 해시태그를 작성하는 중입니다..."):
-                # 통합 프롬프트 작성
                 prompt = f"""
                 당신은 온라인에서 10년 동안 블로그를 운영하며 수많은 방문자를 모아온 '파워 블로거'이자 전문 콘텐츠 크리에이터입니다.
                 아래에 제공된 내용(소스)을 바탕으로, 독자들이 끝까지 읽고 공감할 수 있는 고품질 블로그 포스팅 초안과 썸네일 가이드, 그리고 검색 노출용 해시태그를 작성해주세요.
@@ -106,11 +105,27 @@ if st.button("🚀 블로그 포스팅 및 썸네일 가이드 생성하기", ty
                 - **썸네일 메인 문구 (텍스트)**: (클릭을 부르는 짧고 강렬한 핵심 문구 1~2줄)
                 """
 
-                # 최신 모델명으로 호출
-                response = client.models.generate_content(
-                    model='gemini-3.6-flash',
-                    contents=prompt
-                )
+                # 사용 중이신 환경에 맞춘 3.5 Flash-Lite 모델 및 대체 모델 지정
+                candidate_models = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.6-flash']
+                response = None
+                last_error = None
+
+                for model_name in candidate_models:
+                    try:
+                        response = client.models.generate_content(
+                            model=model_name,
+                            contents=prompt
+                        )
+                        if response and response.text:
+                            break
+                    except Exception as err:
+                        last_error = err
+                        time.sleep(1)
+                        continue
+
+                if response is None or not response.text:
+                    raise last_error
+
                 blog_result = response.text
 
             # 결과 출력 영역
